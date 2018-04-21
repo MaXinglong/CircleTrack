@@ -206,14 +206,29 @@ class Hungarian:
                     break
                 else:            
                     self._step6()
-        print(np.int32(self._label == 1))
+
+        optimal_loc = []
+        unassigned = []
+        for col in range(self._label.shape[1]):
+            col_has = False
+            for row in range(self._label.shape[0]):
+                if self._label[row, col] == self.star:
+                    optimal_loc.append((row, col))
+                    col_has = True
+            if col_has == False:
+                unassigned.append(col)
         if self._transpose:
-            self._label = self._label.transpose()
-        optimal_loc = np.argwhere(self._label == 1)
-        optimal_val = np.sum(self._original_cost_matrix[self._label==1])
-        return optimal_loc, optimal_val
+            optimal_loc = [(y, x) for (x, y) in optimal_loc]
+        return optimal_loc, unassigned
     
 def main():
+    solver = Hungarian()
+
+    answer = solver.solve(np.array([[1, 2], [2, 5], [5, 6]]))
+    print(answer)
+    
+    
+def test():
     ns = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
     spend_time = []
     for n in ns:
