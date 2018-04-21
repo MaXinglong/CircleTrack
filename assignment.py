@@ -1,107 +1,238 @@
 import numpy as np
 import time
-
+import matplotlib.pyplot as plt
 """Implement use method from:
-http://www.hungarianalgorithm.com/"""
+http://csclab.murraystate.edu/~bob.pilgrim/445/munkres.html"""
 
 class Hungarian:
-    def __init__(self, original_cost_matrix=np.random.randn(3,3)):
-        self._original_cost_matrix = original_cost_matrix
-        self._temp_matrix = original_cost_matrix.copy()
-        self._optimal_loc = []
+    star = 1
+    prime = 2
     
-    def _make_matrix_square(self):
-        m, n = np.shape(self._original_cost_matrix)
-        max_dim = max(m, n)
-        self._temp_matrix = np.zeros((max_dim, max_dim))
-        self._temp_matrix[0:m, 0:n] = self._original_cost_matrix
-    
-    def _substract_row_minima(self):
-        self._temp_matrix -= np.min(self._temp_matrix, axis=1, keepdims=True)
-        
-    def _substract_col_minima(self):
-        self._temp_matrix -= np.min(self._temp_matrix, axis=0, keepdims=True)
-        
-    def _is_enough_lines_cover_zeros(self):
-        """if the axis contained all numbers in the shape, it is enough"""
-        temp = np.argwhere(self._temp_matrix==0)
-        if len(list(set(list(temp[:, 0])))) < self._temp_matrix.shape[0]:
-            return False
-        if len(list(set(list(temp[:, 1])))) < self._temp_matrix.shape[1]:
-            return False
-        return True
-    
-    def _cover_all_zeros_with_minimum_numer_lines(self):
-        paint = np.zeros_like(self._temp_matrix)
-        paint[self._temp_matrix!=0] = 1
-        label = np.zeros_like(self._temp_matrix)
-        zero_loc = self._find_first_zero_loc(paint)
-        optimal_loc = []
-        while zero_loc is not None:
-            row, col = zero_loc
-            print(zero_loc)
-            row_zeros_amount = np.sum(paint[row, :]==0)
-            col_zeros_amount = np.sum(paint[:, col]==0)
-            if row_zeros_amount >= col_zeros_amount:
-                label[row, :] += 1
-                paint[row, :] = 1
-            else:
-                label[:, col] += 1
-                paint[:, col] = 1
-            optimal_loc.append((row, col))
-            zero_loc = self._find_first_zero_loc(paint)
-        return label, optimal_loc
+    def __init__(self):
+        self._original_cost_matrix = None
+        self._cost_matrix = None
+        self._transpose = False
+        self._rows = None
+        self._cols = None
+        self._k = None
+        self._row_starred = None
+        self._col_starred = None
+        self._row_covered = None
+        self._col_covered = None
+        self._label = None
+        self._loc_prime = None
 
-    def _find_first_zero_loc(self, paint):
-        start_id = 0
-        for idx in range(start_id, paint.shape[0]*paint.shape[1]):
-            row, col = idx//paint.shape[1], idx%paint.shape[1]
-            if paint[row, col] == 0:
-                return (row, col)
+    def _step0(self):
+        """Create an nxm  matrix called the cost matrix 
+        in which each element represents the cost of 
+        assigning one of n workers to one of m jobs.  
+        Rotate the matrix so that there are at least 
+        as many columns as rows and let k=min(n,m)."""
+        m, n = np.shape(self._cost_matrix)
+        if m > n:
+            self._transpose = True
+            self._cost_matrix = self._cost_matrix.transpose()
+        else:
+            self._transpose = False
+        self._k = np.min([m, n])
+        self._rows, self._cols = np.shape(self._cost_matrix)
+        self._row_starred = np.zeros((self._rows, ), dtype=np.bool)
+        self._col_starred = np.zeros((self._cols, ), dtype=np.bool)
+        self._row_covered = np.zeros((self._rows, ), dtype=np.bool)
+        self._col_covered = np.zeros((self._cols, ), dtype=np.bool)
+        self._label = np.zeros_like(self._cost_matrix)
+
+    def _step1(self):
+        """For each row of the matrix, find the smallest 
+        element and subtract it from every element in its 
+        row.  Go to Step 2."""
+        # TODO: Do not subtract smallest element both row and columns,
+        # when matrix row number smaller than col number.
+        self._cost_matrix -= np.min(self._cost_matrix, axis=1, keepdims=True)
+    
+    def _step2(self):
+         """Find a zero (Z) in the resulting matrix.  
+         If there is no starred zero in its row or column, star Z. 
+         Repeat for each element in the matrix. Go to Step 3."""
+         for row in range(self._rows):
+            for col in range(self._cols):
+                number = self._cost_matrix[row, col]
+                if self._row_starred[row]==True or self._col_starred[col]==True or number!=0:
+                    continue
+                else:
+                    self._label[row, col] = self.star
+                    self._row_starred[row] = True
+                    self._col_starred[col] = True
+         
+    def _step3(self):
+        """Cover each column containing a starred zero.  
+        If K columns are covered, the starred zeros describe a 
+        complete set of unique assignments.  
+        In this case, Go to DONE, otherwise, Go to Step 4."""
+        np.copyto(self._col_covered, self._col_starred)
+        if np.sum(self._col_covered) == self._k:
+            return True
+        else:
+            return False
+        
+    def _step4(self):
+        """Find a noncovered zero and prime it.  
+        If there is no starred zero in the row containing 
+        this primed zero, Go to Step 5.  
+        Otherwise, cover this row and uncover the column 
+        containing the starred zero. Continue in this 
+        manner until there are no uncovered zeros left. 
+        Save the smallest uncovered value and Go to Step 6.
+        For example, the possible situations are, that there is a 
+        noncovered zero which get primed and if there is no starred 
+        zero in its row the program goes onto Step 5.  
+        The other possible way out of Step 4 is that there are 
+        no noncovered zeros at all, 
+        in which case the program goes to Step 6."""
+        # TODO: go to step 6 to find the smallest uncovered value
+        while True:
+            loc = self._find_uncoverd_zeros()
+            if loc is None:
+                return False
+            row, col = loc
+            self._label[row, col] = self.prime
+            if self._row_starred[row] == False:
+                self._loc_prime = (row, col)
+                return True
+            else:
+                self._row_covered[row] = True
+                self._col_covered[self._find_starred_in_row(row)] = False
+       
+    def _step5(self):
+        """Construct a series of alternating primed and starred 
+        zeros as follows.  Let Z0 represent the uncovered primed 
+        zero found in Step 4.  Let Z1 denote the starred zero 
+        in the column of Z0 (if any). Let Z2 denote the 
+        primed zero in the row of Z1 (there will always be one).  
+        Continue until the series terminates at a primed zero 
+        that has no starred zero in its column.  
+        Unstar each starred zero of the series, star each primed 
+        zero of the series, erase all primes and uncover every 
+        line in the matrix.  Return to Step 3."""
+        row, col = self._loc_prime
+        series = []
+        series.append((row, col))
+        while True:
+            row = self._find_starred_in_col(col)
+            if row != None:    
+                series.append((row, col))
+                col = self._find_primed_in_row(row)
+                series.append((row, col))
+            else:
+                break
+        for row, col in series:
+            if self._label[row, col] == self.star:
+                self._label[row, col] = 0
+            elif self._label[row, col] == self.prime:
+                self._label[row, col] = self.star
+        for row, col in series:
+            if self._label[row, col] == self.star:
+                self._row_starred[row] = True
+                self._col_starred[col] = True
+        self._col_covered[:] = 0
+        self._row_covered[:] = 0
+        self._label[self._label==self.prime] = 0
+        
+    def _step6(self):
+        """Add the value found in Step 4 to every element of each 
+        covered row, and subtract it from every element of each 
+        uncovered column.  Return to Step 4 without altering any stars, 
+        primes, or covered lines."""    
+        smallest_value = self._find_smallest_uncorverd_value()
+        
+        for row in range(self._rows):
+            if self._row_covered[row] == True:
+                self._cost_matrix[row, :] += smallest_value
+        for col in range(self._cols):
+            if self._col_covered[col] == False:
+                self._cost_matrix[:, col] -= smallest_value
+                
+    def _find_uncoverd_zeros(self):
+        for row in range(self._rows):
+            for col in range(self._cols):
+                number = self._cost_matrix[row, col]
+                if self._col_covered[col]==True or self._row_covered[row]==True or number!=0:
+                    continue
+                else:
+                    return (row, col)
         return None
 
-    def _create_additional_zeros(self, label):
-        smallest_uncoverd_number = np.min(self._temp_matrix[label==0])
-        self._temp_matrix[label==0] -= smallest_uncoverd_number
-        self._temp_matrix[label==2] += smallest_uncoverd_number
+    def _find_primed_in_row(self, row):
+        for col in range(self._cols):
+            if self._label[row, col] == self.prime:
+                return col
+        return None
         
-    def _optimal_value(self, optimal_loc):
-        val = 0
-        for row, col in optimal_loc:
-            val += self._original_cost_matrix[row, col]
-        return val
+    def _find_starred_in_col(self, col):
+        for row in range(self._rows):
+            if self._label[row, col] == self.star:
+                return row 
+        return None
+
+    def _find_starred_in_row(self, row):
+        for col in range(self._cols):
+            if self._label[row, col] == self.star:
+                return col
+        return None
+
+    def _find_smallest_uncorverd_value(self):
+        smallest_uncoverd_value = None
+        for row in range(self._rows):
+            for col in range(self._cols):
+                if self._col_covered[col]==True or self._row_covered[row]==True:
+                    continue
+                if smallest_uncoverd_value == None:
+                    smallest_uncoverd_value = self._cost_matrix[row, col]
+                elif self._cost_matrix[row, col] < smallest_uncoverd_value:
+                    smallest_uncoverd_value = self._cost_matrix[row, col]
+        return smallest_uncoverd_value         
     
-    def set_original_cost_matrix(self, original_cost_matrix=np.random.randn(3, 3)):
-        self.__init__(original_cost_matrix)
-    
-    def solve(self):
-        self._substract_row_minima()
-        print(self._temp_matrix)
-        self._substract_col_minima()
-        print(self._temp_matrix)
-        optimal_loc = []
-        while len(optimal_loc)!=self._temp_matrix.shape[0]:
-            label, optimal_loc = self._cover_all_zeros_with_minimum_numer_lines()
-            self._create_additional_zeros(label)
-        return optimal_loc, self._optimal_value(optimal_loc)
-    
+    def solve(self, cost_matrix=np.random.randint(30, size=(5, 3))):
+        self.__init__()
+        self._original_cost_matrix = cost_matrix
+        self._cost_matrix = cost_matrix.copy()
+        self._step0()
+        self._step1()
+        self._step2()
+        while self._step3() != True:
+            while True:
+                if self._step4() == True:
+                    self._step5()
+                    break
+                else:            
+                    self._step6()
+        print(np.int32(self._label == 1))
+        if self._transpose:
+            self._label = self._label.transpose()
+        optimal_loc = np.argwhere(self._label == 1)
+        optimal_val = np.sum(self._original_cost_matrix[self._label==1])
+        return optimal_loc, optimal_val
     
 def main():
-    test_matrix = np.array([[32, 97, 83, 95, 15, 88], [13, 32, 47, 92, 45, 30], [90, 17, 17, 43, 73, 9], [37, 67, 55, 72, 42, 36], [84, 69, 75, 59, 85, 53], [25, 22, 43, 93, 25, 87]])
-
-    solver = Hungarian()
-    solver.set_original_cost_matrix(test_matrix)
-    print(solver.solve())
+    ns = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    spend_time = []
+    for n in ns:
+        seed = 10
+        np.random.seed(seed)
+        test_matrix = np.random.randn(n, n)
+        
+        solver = Hungarian()
+        start = time.clock()
+        answer = solver.solve(test_matrix)
+        cost_time = time.clock() - start
+        spend_time.append(cost_time)
+        print('%d dims matrix cost time: %f' %(n, cost_time))
+        
+    plt.plot(ns, spend_time)
+    plt.xlabel('n')
+    plt.ylabel('cost time: /s')
+    plt.show()
     
-def factorial(n):
-    return n*factorial(n-1) if n > 1 else 1
-
-def C_m_n(m, n):
-    return factorial(n)/(factorial(m)*factorial(n-m))
-
-def A_m_n(m, n):
-    return factorial(n)/factorial(n-m)
-
 if __name__ == '__main__':
     main()
     
