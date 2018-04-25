@@ -1,5 +1,5 @@
 """
-Track multiple object use kalman filter, reimplement use python.
+Track multiple object use kalman filter, reimplement by python.
 https://www.mathworks.com/help/vision/examples/motion-based-multiple-object-tracking.html"""
 import numpy as np
 import matplotlib.pyplot as plt
