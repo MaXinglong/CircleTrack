@@ -1,4 +1,7 @@
-# Circle Track
+Track multiple object use kalman filter, reimplement by python.
+learned from this website:
+https://www.mathworks.com/help/vision/examples/motion-based-multiple-object-tracking.html
+##
 Framework for Multi Objects Tracking.
 ## Generate simple video for test algrithm.
 Generate simple video which contains several objects
