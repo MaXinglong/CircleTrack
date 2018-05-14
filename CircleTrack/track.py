@@ -13,7 +13,7 @@ from tools import particlelist as ps
 delt_t = 0.04
 max_lose_time = 0.1
 min_distance_lose = 50
-random_seed = 2
+random_seed = 3
 
 
 def distance(t1=np.zeros((1, 2)), t2=np.zeros((1, 2))):
@@ -140,20 +140,20 @@ def generate_measuremens(sequence_num=1000):
     particals = ps.ParticalList()
         
     for i in range(sequence_num):
-#        if np.random.random() < 0.01:
-        if i == 0:
+        if np.random.random() < 0.005:
+#        if i == 0:
             rand_x = np.random.random()*1000
             rand_y = np.random.random()*1000
             rand_xsp = max(np.random.random()*10, 5)*np.sign(np.random.randn())
             rand_ysp = max(np.random.random()*10, 5)*np.sign(np.random.randn())
             particals.append(init_x=rand_x, init_y=rand_y, x_sp=rand_xsp, y_sp=rand_ysp)
 
-        if particals.amounts() == 0:
-            rand_x = np.random.random()*1000
-            rand_y = np.random.random()*1000
-            rand_xsp = 10+np.random.random()*5
-            rand_ysp = 10+np.random.random()*5
-            particals.append(init_x=rand_x, init_y=rand_y, x_sp=rand_xsp, y_sp=rand_ysp)
+#        if particals.amounts() == 0:
+#            rand_x = np.random.random()*1000
+#            rand_y = np.random.random()*1000
+#            rand_xsp = 10+np.random.random()*5
+#            rand_ysp = 10+np.random.random()*5
+#            particals.append(init_x=rand_x, init_y=rand_y, x_sp=rand_xsp, y_sp=rand_ysp)
 
         particals.update()
         measurement = particals.get_measurements()
@@ -190,7 +190,8 @@ def main():
     
     data = np.array(extract_data(predicts))
     plt.plot(data[:, 0], data[:, 1], 'o', markersize=1)
-    plt.title('5 objects')
+    plt.legend(['measurements', 'predicts'])
+    plt.title('Track result')
     plt.show()
 
 
