@@ -14,4 +14,4 @@ you algrithm by calculate the MOT metrics.
 Generate the prediction every frame, and calculate 
 MOT tracking metrics.
 ## Tracking Results
-![Image text]( CircleTrack/Figure_1.png )
+![Image text]( https://raw.githubusercontent.com/MaXinglong/CircleTrack/master/Figure_1.png )
