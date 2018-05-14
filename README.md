@@ -4,6 +4,9 @@ https://www.mathworks.com/help/vision/examples/motion-based-multiple-object-trac
 ##
 Framework for Multi Objects Tracking.
 
+## Tracking Results
+![Image text]( https://raw.githubusercontent.com/MaXinglong/CircleTrack/master/Figure_1.png )
+
 # waiting for implement......
 ## Generate simple video for test algrithm.
 Generate simple video which contains several objects
@@ -13,5 +16,4 @@ you algrithm by calculate the MOT metrics.
 ## Evaluate Algrithm
 Generate the prediction every frame, and calculate 
 MOT tracking metrics.
-## Tracking Results
-![Image text]( https://raw.githubusercontent.com/MaXinglong/CircleTrack/master/Figure_1.png )
+
