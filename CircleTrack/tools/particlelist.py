@@ -28,6 +28,9 @@ class Partical:
         self._max_live_time = max_live_time
         self._mass = mass
         self._force = np.array([0.0, 0.0])
+        
+    def set_live_time(self, i=0):
+        self._live_time = i
 
     def update(self):
         ax, ay = self._force/self._mass
@@ -41,7 +44,7 @@ class Partical:
         self._force += force
 
     def is_dead(self):
-        return self._live_time > self._max_live_time
+        return self._live_time >= self._max_live_time
 
     def location(self):
         return self._location
@@ -82,8 +85,6 @@ class ParticalList:
         measurements = []
         for i in range(len(self._list)):
             raw = self._list[i].location().copy() 
-            raw[0] += np.random.randn()*2
-            raw[1] += np.random.randn()*2
             measurements.append(raw)
         return measurements
 
@@ -93,9 +94,8 @@ class ParticalList:
     def info(self):
         info = []
 
-
 def generate_measuremens(sequence_num=1000):
-    """generate measurements"""
+    """an example for generate measurements"""
     output = []
     particals = ParticalList()
         
@@ -117,4 +117,5 @@ def generate_measuremens(sequence_num=1000):
     # print(output)
     return output
 
-__all__ = ['generate_measurements']
+__all__ = ['ParticalList']
+
