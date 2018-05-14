@@ -14,4 +14,4 @@ you algrithm by calculate the MOT metrics.
 Generate the prediction every frame, and calculate 
 MOT tracking metrics.
 ## Tracking Results
-![Image text]()
+![Image text]( CircleTrack/Figure_1.png )
