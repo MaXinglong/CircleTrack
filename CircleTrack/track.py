@@ -13,7 +13,7 @@ from tools import particlelist as ps
 delt_t = 0.04
 max_lose_time = 0.1
 min_distance_lose = 50
-random_seed = 3
+random_seed = 0
 
 
 def distance(t1=np.zeros((1, 2)), t2=np.zeros((1, 2))):
@@ -50,28 +50,44 @@ class KF_live(kf.Kalman):
     def is_live(self):
         return False if self._lose_time >= max_lose_time else True
 
-class assign_method(assign.Hungarian):
+class Assign_Method(assign.Hungarian):
     def __init__(self, min_distance):
         super().__init__()
         self._min_distance = min_distance
     
+    def gen_padding_cost(self, cost_matrix, no_track_thresh):
+        shape = self.rows+self.cols
+        padding_cost = np.zeros((shape, shape))
+        padding_cost[0:self.rows, 0:self.cols] = cost_matrix
+        padding_cost[0:self.rows, self.cols:] = np.inf
+        padding_cost[self.rows:, 0:self.cols] = np.inf
+        for i in range(0, self.rows):
+                padding_cost[i, i+self.cols] = no_track_thresh
+        for i in range(0, self.cols):
+                padding_cost[i+self.rows, i] = no_track_thresh
+        return padding_cost
+
+    def get_result(self, label):
+        idx = np.argwhere(label==True)
+        rows_idx = idx[:, 0]
+        cols_idx = idx[:, 1]
+        unassigned_row = rows_idx[(rows_idx < self.rows) & (cols_idx > self.cols)]
+        unassigned_col = cols_idx[(cols_idx < self.cols) & (rows_idx > self.rows)]
+        optimal_loc = idx[(rows_idx < self.rows) & (cols_idx < self.cols), :]
+        return optimal_loc, unassigned_row, unassigned_col
+
     def solve(self, cost_matrix_input=np.random.randint(30, size=(5, 3))):
         cost_matrix = cost_matrix_input.copy()
-
-        optimal_loc, unassigned_row, unassigned_col = super().solve(cost_matrix)
-        
-        for idx in optimal_loc:
-            x, y = idx
-##            if cost_matrix[x, y] > self._min_distance:
-##                optimal_loc.remove(idx)
-##                unassigned_row.append(x)
-##                unassigned_col.append(y)
+        self.rows, self.cols = cost_matrix.shape
+        cost_matrix = self.gen_padding_cost(cost_matrix, self._min_distance)
+        label = super().solve_return_get_label(cost_matrix)
+        optimal_loc, unassigned_row, unassigned_col = self.get_result(label)
         return optimal_loc, unassigned_row, unassigned_col
 
 class Solver:
     def __init__(self):
         self._measurements = []
-        self._assign_method = assign_method(min_distance=min_distance_lose)
+        self._assign_method = Assign_Method(min_distance=min_distance_lose)
 
         self._optimal_loc = []
         self._unassign_measure = []
@@ -92,8 +108,6 @@ class Solver:
             self._unassign_measure = []
             return
         cost_matrix = distance_cost(np.array(self._predicts), np.array(self._measurements))
-        
-        
         self._optimal_loc, self._unassign_pred, self._unassign_measure = self._assign_method.solve(cost_matrix)
 
     def _correct(self):
@@ -192,9 +206,12 @@ def main():
     plt.plot(data[:, 0], data[:, 1], 'o', markersize=1)
     plt.legend(['measurements', 'predicts'])
     plt.title('Track result')
-    plt.show()
+    # plt.show()
 
 
 if __name__ == '__main__':
-    main()
-
+    for i in range(10):
+        global random_seed
+        random_seed = i
+        main()
+    plt.show()

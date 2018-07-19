@@ -207,7 +207,7 @@ class Hungarian:
                 elif self._cost_matrix[row, col] < smallest_uncoverd_value:
                     smallest_uncoverd_value = self._cost_matrix[row, col]
         return smallest_uncoverd_value         
-    
+
     def _solve(self, cost_matrix=np.random.randint(30, size=(5, 3))):
         self._clear()
         self._original_cost_matrix = cost_matrix
@@ -222,7 +222,8 @@ class Hungarian:
                     break
                 else:            
                     self._step6()
-
+    
+    def _get_solve_from_label(self):
         optimal_loc = []
         unassigned = []
         for col in range(self._label.shape[1]):
@@ -236,19 +237,29 @@ class Hungarian:
         if self._transpose:
             optimal_loc = [(y, x) for (x, y) in optimal_loc]
 
-        if cost_matrix.shape[0] > cost_matrix.shape[1]:
+        if self._original_cost_matrix.shape[0] > self._original_cost_matrix.shape[1]:
             unassigned_row = unassigned
             unassigned_col = []
-        elif cost_matrix.shape[0] < cost_matrix.shape[1]:
+        elif self._original_cost_matrix.shape[0] < self._original_cost_matrix.shape[1]:
             unassigned_row = []
             unassigned_col = unassigned
-        elif cost_matrix.shape[0] == cost_matrix.shape[1]:
+        elif self._original_cost_matrix.shape[0] == self._original_cost_matrix.shape[1]:
             unassigned_row, unassigned_col = [], []
         return optimal_loc, unassigned_row, unassigned_col
-    
+
+    def solve_return_get_label(self, cost_matrix=np.random.randint(30, size=(5, 3))):
+        """return the label not the assignment results."""
+        self._solve(cost_matrix)
+        return self.get_label()
+
     def solve(self, cost_matrix=np.random.randint(30, size=(5, 3))):
-        optimal_loc, unassigned_row, unassigned_col = self._solve(cost_matrix)
+        """return the assignment results"""
+        self._solve(cost_matrix)
+        optimal_loc, unassigned_row, unassigned_col = self._get_solve_from_label()
         return optimal_loc, unassigned_row, unassigned_col
+
+    def get_label(self):
+        return self._label == self.star
 
 
 def main():
