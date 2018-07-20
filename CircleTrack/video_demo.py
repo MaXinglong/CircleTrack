@@ -4,7 +4,7 @@ import cv2
 import track
 
 
-video = cv2.VideoCapture('../output_multi_long_266.avi')
+video = cv2.VideoCapture('../output_multi_long.avi')
 # video = cv2.VideoCapture('../output_two.avi')
 
 solver = track.Solver()
@@ -29,12 +29,13 @@ while ret:
 
     for p in correct:
         idx, (x, y, _, _) = p
-        frame = cv2.putText(frame, str(idx), (int(x), int(y)), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255))
-        frame = cv2.circle(frame, (int(x), int(y)), 2, (255, 255, 0), 2)
+        if idx != -1:
+            frame = cv2.putText(frame, str(idx), (int(x), int(y)), cv2.FONT_HERSHEY_COMPLEX, 1, (0, 0, 255))
+            frame = cv2.circle(frame, (int(x), int(y)), 2, (255, 255, 0), 2)
 
     print(track.object_count)
-    # cv2.imshow('frame', frame)
-    # key = cv2.waitKey(50) & 0xff
-    # if key == 27:
-    #     break
+    cv2.imshow('frame', frame)
+    key = cv2.waitKey(50) & 0xff
+    if key == 27:
+        break
     ret, frame = video.read()

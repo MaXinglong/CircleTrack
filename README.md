@@ -4,7 +4,19 @@ https://www.mathworks.com/help/vision/examples/motion-based-multiple-object-trac
 ##
 Framework for Multi Objects Tracking.
 
-## Tracking Results
+## Video demo
+Generate video 
+`cd CircleTrack`
+`python partical`
+Video demo
+`python video_demo.py`
+### results
+![Image](video_demo.gif)
+
+## simulate 
+`cd CircleTrack`
+`python track`
+### Tracking Results
 ![Image text]( https://raw.githubusercontent.com/MaXinglong/CircleTrack/master/Figure_1.png )
 
 # waiting for implement......
