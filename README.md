@@ -6,10 +6,14 @@ Framework for Multi Objects Tracking.
 
 ## Video demo
 Generate video 
-`cd CircleTrack`
-`python partical`
+```
+cd CircleTrack
+python partical
+```
 Video demo
-`python video_demo.py`
+```
+python video_demo.py
+```
 ### Results
 ![Image](video_demo.gif)
 
