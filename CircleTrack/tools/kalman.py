@@ -29,6 +29,9 @@ class Kalman:
         K = self._P.dot(self._H.transpose()).dot(np.linalg.inv(self._H.dot(self._P).dot(self._H.transpose()) + self._R))
         self._x = self._x_pred + K.dot(z - self._H.dot(self._x_pred))
         self._P = (np.eye(K.shape[0])-K.dot(self._H)).dot(self._P)
+
+    def get_status(self):
+        return self._x
    
 
 __all__ = ['Kalman']

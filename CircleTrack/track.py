@@ -12,8 +12,12 @@ from tools import particlelist as ps
 
 delt_t = 0.04
 max_lose_time = 0.1
+# assign_live_time = 0.1
+assign_live_time = 0
 min_distance_lose = 50
 random_seed = 0
+
+object_count = 0
 
 
 def distance(t1=np.zeros((1, 2)), t2=np.zeros((1, 2))):
@@ -31,10 +35,18 @@ def distance_cost(worker=np.zeros((3, 2)), job=np.zeros((4, 2))):
     return output
 
 class KF_live(kf.Kalman):
-    def __init__(self, F=np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]), x=np.array([[0], [0], [0], [0]])):
-        super().__init__(F=F, x=x)
+    def __init__(self, 
+            F=np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]),
+            P = np.array([[1000, 0, 0, 0], [0, 1000, 0, 0], [0, 0, 1000, 0], [0, 0, 0, 1000]]),
+            Q = np.array([[0.1, 0, 0, 0], [0, 0.1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]),
+            R = np.array([[10, 0], [0, 10]]),
+            H = np.array([[1, 0, 0, 0], [0, 1, 0, 0]]),
+            x = np.array([[0], [0], [0], [0]]),
+            u = np.array([[0], [0], [0], [0]])):
+        super().__init__(F=F, x=x, Q=Q, R=R, H=H, u=u)
         self._live_time = delt_t
         self._lose_time = 0
+        self._id = -1
 
     def measurement(self, measure):
         if measure is None:
@@ -46,9 +58,16 @@ class KF_live(kf.Kalman):
             super().measurement(measure)
             self._lose_time = 0
             self._live_time += delt_t
+        if (self._id == -1) & (self._live_time > assign_live_time):
+            global object_count
+            object_count = object_count + 1
+            self._id = object_count
     
     def is_live(self):
         return False if self._lose_time >= max_lose_time else True
+
+    def get_id(self):
+        return self._id
 
 class Assign_Method(assign.Hungarian):
     def __init__(self, min_distance):
@@ -85,6 +104,7 @@ class Assign_Method(assign.Hungarian):
         return optimal_loc, unassigned_row, unassigned_col
 
 class Solver:
+    global object_count
     def __init__(self):
         self._measurements = []
         self._assign_method = Assign_Method(min_distance=min_distance_lose)
@@ -95,6 +115,8 @@ class Solver:
         
         self._trackers = []
         self._predicts = []
+
+        self._estimates = []
 
     def _assignment(self):
         if not self._predicts:
@@ -127,7 +149,11 @@ class Solver:
         """create new tracker for the unassigned measurement"""
         for i in self._unassign_measure:
             kf_x = np.array([[self._measurements[i][0]], [self._measurements[i][1]], [0], [0]])
-            k = KF_live(F=np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]), x=kf_x)
+            k = KF_live(F=np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]),
+                        P = np.array([[1000, 0, 0, 0], [0, 1000, 0, 0], [0, 0, 1000, 0], [0, 0, 0, 1000]]),
+                        Q = np.array([[0.1, 0, 0, 0], [0, 0.1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]),
+                        R = np.array([[0.05, 0], [0, 0.05]]),
+                        x=kf_x)
             self._trackers.append(k)
 
     def predict(self):
@@ -146,6 +172,13 @@ class Solver:
         self._delete_losed_tracker()
         self._create_new_tracker()
 
+    def get_correct(self):
+        out = []
+        for t in self._trackers:
+            x = t.get_status()
+            idx = t.get_id()
+            out.append((idx, x))
+        return out
 
 def generate_measuremens(sequence_num=1000):
     """generate measurements"""
@@ -206,12 +239,13 @@ def main():
     plt.plot(data[:, 0], data[:, 1], 'o', markersize=1)
     plt.legend(['measurements', 'predicts'])
     plt.title('Track result')
-    # plt.show()
+    plt.draw()
 
 
 if __name__ == '__main__':
     for i in range(10):
-        global random_seed
         random_seed = i
         main()
     plt.show()
+
+__all__ = ['main']
