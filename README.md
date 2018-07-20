@@ -18,12 +18,15 @@ python video_demo.py
 ![Image](video_demo.gif)
 
 ## Simulate 
-`cd CircleTrack`
-`python track`
+```
+cd CircleTrack
+python track.py
+```
 ### Results
 ![Image text]( https://raw.githubusercontent.com/MaXinglong/CircleTrack/master/Figure_1.png )
 
 # Waiting for implement......
+## Implement by C++
 ## Evaluate Algrithm
 Generate the prediction every frame, and calculate 
 MOT tracking metrics.
