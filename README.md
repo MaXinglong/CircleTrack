@@ -10,21 +10,16 @@ Generate video
 `python partical`
 Video demo
 `python video_demo.py`
-### results
+### Results
 ![Image](video_demo.gif)
 
-## simulate 
+## Simulate 
 `cd CircleTrack`
 `python track`
-### Tracking Results
+### Results
 ![Image text]( https://raw.githubusercontent.com/MaXinglong/CircleTrack/master/Figure_1.png )
 
-# waiting for implement......
-## Generate simple video for test algrithm.
-Generate simple video which contains several objects
-for tracking. You can set the objects' speed, location 
-and other properties. And get the labels to evaluate 
-you algrithm by calculate the MOT metrics.
+# Waiting for implement......
 ## Evaluate Algrithm
 Generate the prediction every frame, and calculate 
 MOT tracking metrics.
