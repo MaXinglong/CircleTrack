@@ -4,13 +4,17 @@ import cv2
 import track
 
 
-video = cv2.VideoCapture('../output_multi_long_266.avi')
+import imageio
+
+video = cv2.VideoCapture('../output_multi_long4.avi')
 # video = cv2.VideoCapture('../output_two.avi')
 
 solver = track.Solver()
 n = 1000
 
 ret, frame = video.read()
+
+frames = []
 
 while ret:
     out = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -45,9 +49,14 @@ while ret:
 
     # print(track.object_count)
     cv2.imshow('frame', frame)
+    frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+
     key = cv2.waitKey(25) & 0xff
     if key == 27:
         break
     elif key == ord(' '):
         cv2.waitKey(0)
     ret, frame = video.read()
+
+
+imageio.mimsave('../results.gif', frames, 'GIF', duration=0.10)
