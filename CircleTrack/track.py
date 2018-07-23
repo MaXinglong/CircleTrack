@@ -11,10 +11,10 @@ from tools import assignment as assign
 from tools import particlelist as ps
 
 delt_t = 0.04
-max_lose_time = 0.1
+max_lose_time = 0.5
 # assign_live_time = 0.1
 assign_live_time = 0
-min_distance_lose = 50
+min_distance_lose = 20
 random_seed = 0
 
 object_count = 0
@@ -58,16 +58,18 @@ class KF_live(kf.Kalman):
             super().measurement(measure)
             self._lose_time = 0
             self._live_time += delt_t
-        if (self._id == -1) & (self._live_time > assign_live_time):
-            global object_count
-            object_count = object_count + 1
-            self._id = object_count
-    
+
+    def set_id(self, idx):
+            self._id = idx
+
     def is_live(self):
-        return False if self._lose_time >= max_lose_time else True
+        return False if self._lose_time > max_lose_time else True
 
     def get_id(self):
         return self._id
+
+    def get_live_time(self):
+        return self._live_time
 
 class Assign_Method(assign.Hungarian):
     def __init__(self, min_distance):
@@ -90,8 +92,8 @@ class Assign_Method(assign.Hungarian):
         idx = np.argwhere(label==True)
         rows_idx = idx[:, 0]
         cols_idx = idx[:, 1]
-        unassigned_row = rows_idx[(rows_idx < self.rows) & (cols_idx > self.cols)]
-        unassigned_col = cols_idx[(cols_idx < self.cols) & (rows_idx > self.rows)]
+        unassigned_row = rows_idx[(rows_idx < self.rows) & (cols_idx >= self.cols)]
+        unassigned_col = cols_idx[(cols_idx < self.cols) & (rows_idx >= self.rows)]
         optimal_loc = idx[(rows_idx < self.rows) & (cols_idx < self.cols), :]
         return optimal_loc, unassigned_row, unassigned_col
 
@@ -142,8 +144,18 @@ class Solver:
 
     def _delete_losed_tracker(self):
         for tracker in self._trackers[:]:
+            # if tracker.get_id() == 1:
+            #     print(tracker._live_time, tracker._lose_time)
             if not tracker.is_live():
+                # print('loss', tracker.get_id())
                 self._trackers.remove(tracker)
+        for t in self._trackers:
+            if (t.get_id() == -1) & (t.get_live_time() > assign_live_time):
+                global object_count
+                object_count = object_count + 1
+                t.set_id(object_count)
+                print(object_count)
+
 
     def _create_new_tracker(self):
         """create new tracker for the unassigned measurement"""
@@ -151,8 +163,8 @@ class Solver:
             kf_x = np.array([[self._measurements[i][0]], [self._measurements[i][1]], [0], [0]])
             k = KF_live(F=np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]),
                         P = np.array([[1000, 0, 0, 0], [0, 1000, 0, 0], [0, 0, 1000, 0], [0, 0, 0, 1000]]),
-                        Q = np.array([[0.1, 0, 0, 0], [0, 0.1, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]]),
-                        R = np.array([[0.05, 0], [0, 0.05]]),
+                        Q = np.array([[10, 0, 0, 0], [0, 10, 0, 0], [0, 0, 10, 0], [0, 0, 0, 10]]),
+                        R = np.array([[0.1, 0], [0, 0.1]]),
                         x=kf_x)
             self._trackers.append(k)
 

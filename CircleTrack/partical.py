@@ -102,16 +102,16 @@ class System:
 count = 0
 def multi_partical():
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter('output_multi_long.avi',fourcc, fps, (width, height), False)
+    out = cv2.VideoWriter('../output_multi_long4.avi',fourcc, fps, (width, height), False)
 
-    np.random.seed(0)
+    np.random.seed(1)
     system = System()
     # while True:
     for w in range(0, 2000):
         print('partical amounts: ', system.amounts, 
             ' system runtime: %0.2f'%system.run_time)
         system.update()
-        if np.random.randn(1) < 0.2:
+        if np.random.rand(1) < 0.1:
             new_partical = Partical(
                 init_x=np.random.randint(height), 
                 init_y=np.random.randint(width),
