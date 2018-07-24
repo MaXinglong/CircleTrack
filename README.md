@@ -23,7 +23,7 @@ python video_demo.py
 ### Results
 ![Image](results.gif)
 
-I generated the results use big duration for seeing the results clearly.
+I generated the results use a big duration for seeing the results clearly.
 
 ## Simulate 
 ```
