@@ -4,6 +4,12 @@ https://www.mathworks.com/help/vision/examples/motion-based-multiple-object-trac
 ##
 Framework for Multi Objects Tracking.
 
+## modified log
+* 2018.07.26
+    
+    Vectorize the distance cost function implementation.
+
+
 ## Video demo
 Generate video 
 ```

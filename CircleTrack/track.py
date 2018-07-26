@@ -34,6 +34,15 @@ def distance_cost(worker=np.zeros((3, 2)), job=np.zeros((4, 2))):
             output[i, j] = distance(worker[i, :], job[j, :])
     return output
 
+def distance_vec(worker=np.zeros((3, 2)), job=np.zeros((4, 2))):
+    """vectorize implementation"""
+    worker_rep = np.tile(worker, [1, job.shape[0]]).reshape(-1, 2)
+    job_rep = np.tile(job, [worker.shape[0], 1])
+    x1, y1 = np.hsplit(worker_rep, 2)
+    x2, y2 = np.hsplit(job_rep, 2)
+    cost = np.sqrt((x1-x2)**2+(y1-y2)**2)
+    return cost.reshape(worker.shape[0], job.shape[0])
+
 class KF_live(kf.Kalman):
     def __init__(self, 
             F=np.array([[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 1, 0], [0, 0, 0, 1]]),
@@ -131,7 +140,7 @@ class Solver:
             self._unassign_pred = list(range(0, len(self._predicts)))
             self._unassign_measure = []
             return
-        cost_matrix = distance_cost(np.array(self._predicts), np.array(self._measurements))
+        cost_matrix = distance_vec(np.array(self._predicts), np.array(self._measurements))
         self._optimal_loc, self._unassign_pred, self._unassign_measure = self._assign_method.solve(cost_matrix)
 
     def _correct(self):
