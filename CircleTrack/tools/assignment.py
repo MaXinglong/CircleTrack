@@ -73,7 +73,7 @@ class Hungarian:
          for row in range(self._rows):
             for col in range(self._cols):
                 number = self._cost_matrix[row, col]
-                if self._row_starred[row]==True or self._col_starred[col]==True or number!=0:
+                if (self._row_starred[row]==True) or (self._col_starred[col]==True) or (number!=0):
                     continue
                 else:
                     self._label[row, col] = self.star
